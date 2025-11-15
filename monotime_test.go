@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestMonotimeMonotonicity(t *testing.T) {
@@ -136,7 +137,10 @@ func TestMonoUUIDRollback(t *testing.T) {
 }
 
 func TestUUIDParseRoundTrip(t *testing.T) {
-	g, _ := NewMonoUUID(1001, ZeroUUID)
+	g, err := NewMonoUUID(1001, ZeroUUID)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for i := 0; i < 10000; i++ {
 		id := g.Next()
@@ -179,7 +183,10 @@ func TestUUIDInvalidVariant(t *testing.T) {
 }
 
 func TestUUIDv7InvalidPrefix(t *testing.T) {
-	g, _ := NewMonoUUID(1, ZeroUUID)
+	g, err := NewMonoUUID(1, ZeroUUID)
+	if err != nil {
+		t.Fatal(err)
+	}
 	id := g.Next()
 
 	// break prefix
@@ -192,7 +199,10 @@ func TestUUIDv7InvalidPrefix(t *testing.T) {
 }
 
 func TestBinaryMarshalUnmarshal(t *testing.T) {
-	g, _ := NewMonoUUID(55, ZeroUUID)
+	g, err := NewMonoUUID(55, ZeroUUID)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	id := g.Next()
 
@@ -227,7 +237,10 @@ func TestUUIDScanRejectsInvalid(t *testing.T) {
 }
 
 func TestUUIDStringFormat(t *testing.T) {
-	g, _ := NewMonoUUID(1, ZeroUUID)
+	g, err := NewMonoUUID(1, ZeroUUID)
+	if err != nil {
+		t.Fatal(err)
+	}
 	id := g.Next()
 
 	s := id.String()
@@ -380,7 +393,10 @@ func TestUUIDSQLRoundtrip(t *testing.T) {
 		t.Fatal("Scan([]byte text) roundtrip failed")
 	}
 
-	bin, _ := u1.MarshalBinary()
+	bin, err := u1.MarshalBinary()
+	if err != nil {
+		t.Fatalf("u1 MarshalBinary error: %v", err)
+	}
 	var u4 UUID
 	if err = u4.Scan(bin); err != nil {
 		t.Fatalf("Scan([]byte binary) failed: %v", err)
@@ -410,13 +426,6 @@ func mustDecodeHex(t *testing.T, s string) []byte {
 
 /**/
 
-var (
-	benchGen     = New(0)
-	benchUUIDGen = mustNewBenchGen()
-	benchUUID    = benchUUIDGen.Next()
-	benchUUIDStr = benchUUID.String()
-)
-
 func mustNewBenchGen() *MonoUUID {
 	g, err := NewMonoUUID(1, ZeroUUID)
 	if err != nil {
@@ -425,75 +434,107 @@ func mustNewBenchGen() *MonoUUID {
 	return g
 }
 
-func BenchmarkMonotime_Next(b *testing.B) {
+func BenchmarkMonotimeNext(b *testing.B) {
+	mono := New(0)
+	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		benchGen.Next()
+		mono.Next()
 	}
 }
 
-func BenchmarkMonotime_NextParallel(b *testing.B) {
+func BenchmarkMonotimeNextParallel(b *testing.B) {
+	mono := New(0)
+	b.ResetTimer()
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			benchGen.Next()
+			mono.Next()
 		}
 	})
 }
 
-func BenchmarkMonoUUID_Next(b *testing.B) {
+func BenchmarkMonoUUIDNext(b *testing.B) {
+	muid := mustNewBenchGen()
+	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		benchUUIDGen.Next()
+		muid.Next()
 	}
 }
 
-func BenchmarkMonoUUID_NextParallel(b *testing.B) {
+func BenchmarkMonoUUIDNextParallel(b *testing.B) {
+	muid := mustNewBenchGen()
+	b.ResetTimer()
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			benchUUIDGen.Next()
+			muid.Next()
 		}
 	})
 }
 
-func BenchmarkUUID_String(b *testing.B) {
+func BenchmarkUUIDString(b *testing.B) {
+	muid := mustNewBenchGen()
+	v := muid.Next()
+	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_ = benchUUID.String()
+		_ = v.String()
 	}
 }
 
-func BenchmarkUUID_MarshalText(b *testing.B) {
+func BenchmarkUUIDMarshalText(b *testing.B) {
+	muid := mustNewBenchGen()
+	v := muid.Next()
+	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_, _ = benchUUID.MarshalText()
+		if _, err := v.MarshalText(); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 
-func BenchmarkUUID_Parse(b *testing.B) {
+func BenchmarkUUIDParse(b *testing.B) {
+	muid := mustNewBenchGen()
+	v := muid.Next()
+	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_, _, _ = benchUUID.Parse()
+		_, _, _ = v.Parse()
 	}
 }
 
-func BenchmarkUUID_UnmarshalText(b *testing.B) {
-	var u UUID
-	v := []byte(benchUUIDStr)
+func BenchmarkUUIDUnmarshalText(b *testing.B) {
+	muid := mustNewBenchGen()
+	v := []byte(muid.Next().String())
+	u := UUID{}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = u.UnmarshalText(v)
+		if err := u.UnmarshalText(v); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 
-func BenchmarkUUID_UnmarshalBinary(b *testing.B) {
-	var u UUID
-	v, _ := benchUUID.MarshalBinary()
+func BenchmarkUUIDUnmarshalBinary(b *testing.B) {
+	muid := mustNewBenchGen()
+	x := muid.Next()
+	v := x[:]
+	u := new(UUID)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = u.UnmarshalBinary(v)
+		if err := u.UnmarshalBinary(v); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkTimeNow(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = time.Now().UnixNano()
 	}
 }
