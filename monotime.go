@@ -359,10 +359,10 @@ func (g *MonoUUID) Next() UUID {
 
 	ms := uint64(nextNano / 1_000_000)
 
-	nanoRemainder := uint32(nextNano) & nanoMask // ~
+	// nanoRemainder := uint32(nextNano) & nanoMask // ~
 
-	// (nextNano % 1_000_000) is always < 1M and fits in 20 bits, should we use it?
-	// nanoRemainder := uint32(nextNano % 1_000_000)
+	// (nextNano % 1_000_000) is always < 1M and fits in 20 bits
+	nanoRemainder := uint32(nextNano % 1_000_000)
 
 	var id [16]byte
 
