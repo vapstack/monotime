@@ -142,7 +142,7 @@ func (u UUID) time(nano uint32) time.Time {
 
 	// build nanoseconds
 	sec := int64(ms / 1000)
-	nsec := int64(ms%1000)*1_000_000 + int64(nano) // this can contain slightly more nanos, but it's ok
+	nsec := int64(ms%1000)*1_000_000 + int64(nano)
 
 	return time.Unix(sec, nsec)
 }
@@ -233,7 +233,7 @@ func (u *UUID) UnmarshalBinary(data []byte) error {
 
 	if _, _, ok := u.parse(); !ok {
 		// this breaks standard UUID compatibility,
-		// but it's better than storing invalid monotime UUID and than passing it to NewMonoUUID
+		// but it's better than storing invalid monotime UUID and then passing it to NewMonoUUID
 		return fmt.Errorf("the provided UUID is not a monotime UUID")
 	}
 
