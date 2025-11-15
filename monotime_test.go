@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func TestMonotimeMonotonicity(t *testing.T) {
-	m := New(0)
+func TestGenMonotonicity(t *testing.T) {
+	m := NewGen(0)
 	prev := m.Next()
 	for i := 0; i < 1_000_000; i++ {
 		n := m.Next()
@@ -22,8 +22,8 @@ func TestMonotimeMonotonicity(t *testing.T) {
 	}
 }
 
-func TestMonotimeConcurrency(t *testing.T) {
-	m := New(0)
+func TestGenConcurrency(t *testing.T) {
+	m := NewGen(0)
 
 	const goroutines = 8
 	const perG = 5000
@@ -56,8 +56,8 @@ func TestMonotimeConcurrency(t *testing.T) {
 
 /**/
 
-func TestMonoUUIDMonotonicity(t *testing.T) {
-	g, err := NewMonoUUID(123, ZeroUUID)
+func TestGenUUIDMonotonicity(t *testing.T) {
+	g, err := NewGenUUID(123, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,8 +71,8 @@ func TestMonoUUIDMonotonicity(t *testing.T) {
 	}
 }
 
-func TestMonoUUIDConcurrency(t *testing.T) {
-	m, err := NewMonoUUID(5, ZeroUUID)
+func TestGenUUIDConcurrency(t *testing.T) {
+	m, err := NewGenUUID(5, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,9 +106,9 @@ func TestMonoUUIDConcurrency(t *testing.T) {
 	}
 }
 
-func TestMonoUUIDNodeID(t *testing.T) {
+func TestGenUUIDNodeID(t *testing.T) {
 	node := 987654
-	g, err := NewMonoUUID(node, ZeroUUID)
+	g, err := NewGenUUID(node, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,8 +120,8 @@ func TestMonoUUIDNodeID(t *testing.T) {
 	}
 }
 
-func TestMonoUUIDRollback(t *testing.T) {
-	g, err := NewMonoUUID(42, ZeroUUID)
+func TestGenUUIDRollback(t *testing.T) {
+	g, err := NewGenUUID(42, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func TestMonoUUIDRollback(t *testing.T) {
 }
 
 func TestUUIDParseRoundTrip(t *testing.T) {
-	g, err := NewMonoUUID(1001, ZeroUUID)
+	g, err := NewGenUUID(1001, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,8 +182,8 @@ func TestUUIDInvalidVariant(t *testing.T) {
 	}
 }
 
-func TestUUIDv7InvalidPrefix(t *testing.T) {
-	g, err := NewMonoUUID(1, ZeroUUID)
+func TestUUIDInvalidPrefix(t *testing.T) {
+	g, err := NewGenUUID(1, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,8 +198,8 @@ func TestUUIDv7InvalidPrefix(t *testing.T) {
 	}
 }
 
-func TestBinaryMarshalUnmarshal(t *testing.T) {
-	g, err := NewMonoUUID(55, ZeroUUID)
+func TestUUIDBinaryMarshalUnmarshal(t *testing.T) {
+	g, err := NewGenUUID(55, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,7 +220,7 @@ func TestBinaryMarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestUnmarshalBinaryRejectsInvalid(t *testing.T) {
+func TestUUIDUnmarshalBinaryRejectsInvalid(t *testing.T) {
 	var u UUID
 	err := u.UnmarshalBinary(make([]byte, 16))
 	if err == nil {
@@ -237,7 +237,7 @@ func TestUUIDScanRejectsInvalid(t *testing.T) {
 }
 
 func TestUUIDStringFormat(t *testing.T) {
-	g, err := NewMonoUUID(1, ZeroUUID)
+	g, err := NewGenUUID(1, ZeroUUID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +252,7 @@ func TestUUIDStringFormat(t *testing.T) {
 	}
 }
 
-func TestUnmarshalTextRejectsInvalidLength(t *testing.T) {
+func TestUUIDUnmarshalTextRejectsInvalidLength(t *testing.T) {
 	var u UUID
 	err := u.UnmarshalText([]byte("too-short"))
 	if err == nil {
@@ -296,9 +296,9 @@ var uuidRegex = regexp.MustCompile(
 )
 
 func TestUUIDTextRoundtrip(t *testing.T) {
-	g, err := NewMonoUUID(1, ZeroUUID)
+	g, err := NewGenUUID(1, ZeroUUID)
 	if err != nil {
-		t.Fatalf("NewMonoUUID failed: %v", err)
+		t.Fatalf("NewGenUUID failed: %v", err)
 	}
 	u1 := g.Next()
 
@@ -325,9 +325,9 @@ func TestUUIDTextRoundtrip(t *testing.T) {
 }
 
 func TestUUIDBinaryRoundtrip(t *testing.T) {
-	g, err := NewMonoUUID(1, ZeroUUID)
+	g, err := NewGenUUID(1, ZeroUUID)
 	if err != nil {
-		t.Fatalf("NewMonoUUID failed: %v", err)
+		t.Fatalf("NewGenUUID failed: %v", err)
 	}
 	u1 := g.Next()
 
@@ -359,9 +359,9 @@ func TestUUIDBinaryRoundtrip(t *testing.T) {
 }
 
 func TestUUIDSQLRoundtrip(t *testing.T) {
-	g, err := NewMonoUUID(99, ZeroUUID)
+	g, err := NewGenUUID(99, ZeroUUID)
 	if err != nil {
-		t.Fatalf("NewMonoUUID failed: %v", err)
+		t.Fatalf("NewGenUUID failed: %v", err)
 	}
 	u1 := g.Next()
 
@@ -426,16 +426,16 @@ func mustDecodeHex(t *testing.T, s string) []byte {
 
 /**/
 
-func mustNewBenchGen() *MonoUUID {
-	g, err := NewMonoUUID(1, ZeroUUID)
+func mustNewBenchGenUUID() *GenUUID {
+	g, err := NewGenUUID(1, ZeroUUID)
 	if err != nil {
 		panic(err)
 	}
 	return g
 }
 
-func BenchmarkMonotimeNext(b *testing.B) {
-	mono := New(0)
+func BenchmarkGenNext(b *testing.B) {
+	mono := NewGen(0)
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -443,8 +443,8 @@ func BenchmarkMonotimeNext(b *testing.B) {
 	}
 }
 
-func BenchmarkMonotimeNextParallel(b *testing.B) {
-	mono := New(0)
+func BenchmarkGenNextParallel(b *testing.B) {
+	mono := NewGen(0)
 	b.ResetTimer()
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
@@ -454,8 +454,8 @@ func BenchmarkMonotimeNextParallel(b *testing.B) {
 	})
 }
 
-func BenchmarkMonoUUIDNext(b *testing.B) {
-	muid := mustNewBenchGen()
+func BenchmarkGenUUIDNext(b *testing.B) {
+	muid := mustNewBenchGenUUID()
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -463,8 +463,8 @@ func BenchmarkMonoUUIDNext(b *testing.B) {
 	}
 }
 
-func BenchmarkMonoUUIDNextParallel(b *testing.B) {
-	muid := mustNewBenchGen()
+func BenchmarkGenUUIDNextParallel(b *testing.B) {
+	muid := mustNewBenchGenUUID()
 	b.ResetTimer()
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
@@ -475,7 +475,7 @@ func BenchmarkMonoUUIDNextParallel(b *testing.B) {
 }
 
 func BenchmarkUUIDString(b *testing.B) {
-	muid := mustNewBenchGen()
+	muid := mustNewBenchGenUUID()
 	v := muid.Next()
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -485,7 +485,7 @@ func BenchmarkUUIDString(b *testing.B) {
 }
 
 func BenchmarkUUIDMarshalText(b *testing.B) {
-	muid := mustNewBenchGen()
+	muid := mustNewBenchGenUUID()
 	v := muid.Next()
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -497,7 +497,7 @@ func BenchmarkUUIDMarshalText(b *testing.B) {
 }
 
 func BenchmarkUUIDParse(b *testing.B) {
-	muid := mustNewBenchGen()
+	muid := mustNewBenchGenUUID()
 	v := muid.Next()
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -507,7 +507,7 @@ func BenchmarkUUIDParse(b *testing.B) {
 }
 
 func BenchmarkUUIDUnmarshalText(b *testing.B) {
-	muid := mustNewBenchGen()
+	muid := mustNewBenchGenUUID()
 	v := []byte(muid.Next().String())
 	u := UUID{}
 	b.ReportAllocs()
@@ -520,7 +520,7 @@ func BenchmarkUUIDUnmarshalText(b *testing.B) {
 }
 
 func BenchmarkUUIDUnmarshalBinary(b *testing.B) {
-	muid := mustNewBenchGen()
+	muid := mustNewBenchGenUUID()
 	x := muid.Next()
 	v := x[:]
 	u := new(UUID)
@@ -528,6 +528,18 @@ func BenchmarkUUIDUnmarshalBinary(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		if err := u.UnmarshalBinary(v); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkUUIDMarshalBinary(b *testing.B) {
+	muid := mustNewBenchGenUUID()
+	x := muid.Next()
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if _, err := x.MarshalBinary(); err != nil {
 			b.Fatal(err)
 		}
 	}

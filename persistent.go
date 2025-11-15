@@ -12,16 +12,15 @@ import (
 	"sync"
 )
 
-// DurableMonotime provides a durable, crash-safe wrapper around a Monotime
-// by persisting its state to a write-ahead log.
-type DurableMonotime struct {
-	gen *Monotime
+// PersistentGen provides a persistence wrapper around a Gen by storing its state to a write-ahead log.
+type PersistentGen struct {
+	gen *Gen
 	wal *wal
 }
 
-// OpenDurable opens or creates a log file using the provided filename
-// and returns DurableMonotime with its state restored from the last entry in the log.
-func OpenDurable(filename string) (*DurableMonotime, error) {
+// OpenGen opens or creates a log file using the provided filename
+// and returns PersistentGen with its state restored from the last entry in the log.
+func OpenGen(filename string) (*PersistentGen, error) {
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return nil, err
 	}
@@ -29,13 +28,13 @@ func OpenDurable(filename string) (*DurableMonotime, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening WAL: %w", err)
 	}
-	var g *Monotime
+	var g *Gen
 	if len(last) == 0 {
-		g = New(0)
+		g = NewGen(0)
 	} else {
-		g = New(int64(binary.BigEndian.Uint64(last)))
+		g = NewGen(int64(binary.BigEndian.Uint64(last)))
 	}
-	d := &DurableMonotime{
+	d := &PersistentGen{
 		gen: g,
 		wal: w,
 	}
@@ -43,9 +42,9 @@ func OpenDurable(filename string) (*DurableMonotime, error) {
 }
 
 // Next generates a new timestamp and synchronously persists it to disk before returning.
-// The generation logic is identical to Monotime.Next.
+// The generation logic is identical to Gen.Next.
 // This method returns an error only if the write fails.
-func (d *DurableMonotime) Next() (int64, error) {
+func (d *PersistentGen) Next() (int64, error) {
 	v := d.gen.Next()
 	var b [8]byte
 	binary.BigEndian.PutUint64(b[:], uint64(v))
@@ -53,26 +52,22 @@ func (d *DurableMonotime) Next() (int64, error) {
 }
 
 // Close flushes and closes the underlying WAL file.
-func (d *DurableMonotime) Close() error {
+func (d *PersistentGen) Close() error {
 	return d.wal.close()
 }
 
 /**/
 
-// DurableMonoUUID provides a durable, crash-safe wrapper around a MonoUUID
-// by persisting its state to a write-ahead log.
-type DurableMonoUUID struct {
-	gen *MonoUUID
+// PersistentGenUUID provides a persistence wrapper around a GenUUID by storing its state to a write-ahead log.
+type PersistentGenUUID struct {
+	gen *GenUUID
 	wal *wal
 }
 
-// OpenDurableUUID opens or creates a new DurableMonoUUID using the specified file.
-// It automatically resumes from the last stored value.
-
-// OpenDurableUUID opens or creates a log file using the provided filename
-// and returns DurableMonoUUID with its state restored from the last entry in the log.
+// OpenGenUUID opens or creates a log file using the provided filename
+// and returns PersistentGenUUID with its state restored from the last entry in the log.
 // It will return an error if the provided nodeID does not match the node ID stored in the log.
-func OpenDurableUUID(filename string, nodeID int) (*DurableMonoUUID, error) {
+func OpenGenUUID(filename string, nodeID int) (*PersistentGenUUID, error) {
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return nil, err
 	}
@@ -80,16 +75,16 @@ func OpenDurableUUID(filename string, nodeID int) (*DurableMonoUUID, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening WAL: %w", err)
 	}
-	var g *MonoUUID
+	var g *GenUUID
 	if len(last) == 0 {
-		g, err = NewMonoUUID(nodeID, ZeroUUID)
+		g, err = NewGenUUID(nodeID, ZeroUUID)
 	} else {
-		g, err = NewMonoUUID(nodeID, UUID(last))
+		g, err = NewGenUUID(nodeID, UUID(last))
 	}
 	if err != nil {
 		return nil, err
 	}
-	d := &DurableMonoUUID{
+	d := &PersistentGenUUID{
 		gen: g,
 		wal: w,
 	}
@@ -97,15 +92,15 @@ func OpenDurableUUID(filename string, nodeID int) (*DurableMonoUUID, error) {
 }
 
 // Next generates a new UUID and synchronously saves it to disk before returning.
-// The generation logic is identical to MonoUUID.Next.
+// The generation logic is identical to GenUUID.Next.
 // This method returns an error only if the write fails.
-func (d *DurableMonoUUID) Next() (UUID, error) {
+func (d *PersistentGenUUID) Next() (UUID, error) {
 	v := d.gen.Next()
 	return v, d.wal.store(v[:])
 }
 
 // Close flushes and closes the underlying WAL file.
-func (d *DurableMonoUUID) Close() error {
+func (d *PersistentGenUUID) Close() error {
 	return d.wal.close()
 }
 

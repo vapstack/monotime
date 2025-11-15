@@ -35,12 +35,12 @@ func readLastEntry(t *testing.T, filename string, entrySize int) []byte {
 	return b[lastFull-entrySize : lastFull]
 }
 
-func TestDurableMonotimeRoundtrip(t *testing.T) {
+func TestPersistentGenRoundtrip(t *testing.T) {
 	filename := newTestDir(t)
 
-	d1, err := OpenDurable(filename)
+	d1, err := OpenGen(filename)
 	if err != nil {
-		t.Fatalf("OpenDurable (1): %v", err)
+		t.Fatalf("OpenGen (1): %v", err)
 	}
 
 	_, err = d1.Next()
@@ -64,9 +64,9 @@ func TestDurableMonotimeRoundtrip(t *testing.T) {
 		t.Fatalf("WAL value mismatch: expected %d, got %d", v2, lastV)
 	}
 
-	d2, err := OpenDurable(filename)
+	d2, err := OpenGen(filename)
 	if err != nil {
-		t.Fatalf("OpenDurable (2): %v", err)
+		t.Fatalf("OpenGen (2): %v", err)
 	}
 	if d2.gen.last.Load() < v2 {
 		t.Fatalf("Generator did not load last value: expected >= %d, got %d", v2, d2.gen.last.Load())
@@ -85,13 +85,13 @@ func TestDurableMonotimeRoundtrip(t *testing.T) {
 	}
 }
 
-func TestDurableMonoUUIDRoundtrip(t *testing.T) {
+func TestPersistentGenUUIDRoundtrip(t *testing.T) {
 	filename := newTestDir(t)
 	nodeID := 123
 
-	d1, err := OpenDurableUUID(filename, nodeID)
+	d1, err := OpenGenUUID(filename, nodeID)
 	if err != nil {
-		t.Fatalf("OpenDurableUUID (1): %v", err)
+		t.Fatalf("OpenGenUUID (1): %v", err)
 	}
 
 	_, err = d1.Next()
@@ -114,9 +114,9 @@ func TestDurableMonoUUIDRoundtrip(t *testing.T) {
 		t.Fatalf("WAL value mismatch: expected %s, got %s", u2, UUID(lastB))
 	}
 
-	d2, err := OpenDurableUUID(filename, nodeID)
+	d2, err := OpenGenUUID(filename, nodeID)
 	if err != nil {
-		t.Fatalf("OpenDurableUUID (2): %v", err)
+		t.Fatalf("OpenGenUUID (2): %v", err)
 	}
 
 	if d2.gen.lastNano.Load() < u2.Time().UnixNano() {
@@ -136,10 +136,10 @@ func TestDurableMonoUUIDRoundtrip(t *testing.T) {
 	}
 }
 
-func TestDurableMonoUUIDNodeIDMismatch(t *testing.T) {
+func TestPersistentGenUUIDNodeIDMismatch(t *testing.T) {
 	filename := newTestDir(t)
 
-	d1, err := OpenDurableUUID(filename, 10)
+	d1, err := OpenGenUUID(filename, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestDurableMonoUUIDNodeIDMismatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = OpenDurableUUID(filename, 20)
+	_, err = OpenGenUUID(filename, 20)
 	if err == nil {
 		t.Fatal("Expected error when opening WAL with mismatched nodeID, but got nil")
 	}
@@ -221,7 +221,7 @@ func TestWALStoreClosed(t *testing.T) {
 	}
 }
 
-func newBenchDurableMonotime(b *testing.B) (*DurableMonotime, func()) {
+func newBenchPersistentGen(b *testing.B) (*PersistentGen, func()) {
 	b.Helper()
 	dir, err := os.MkdirTemp("", "mono_time_bench_*")
 	if err != nil {
@@ -229,9 +229,9 @@ func newBenchDurableMonotime(b *testing.B) (*DurableMonotime, func()) {
 	}
 	filename := filepath.Join(dir, "bench.wal")
 
-	d, err := OpenDurable(filename)
+	d, err := OpenGen(filename)
 	if err != nil {
-		b.Fatalf("OpenDurable: %v", err)
+		b.Fatalf("OpenGen: %v", err)
 	}
 
 	cleanup := func() {
@@ -241,7 +241,7 @@ func newBenchDurableMonotime(b *testing.B) (*DurableMonotime, func()) {
 	return d, cleanup
 }
 
-func newBenchDurableUUID(b *testing.B) (*DurableMonoUUID, func()) {
+func newBenchPersistentGenUUID(b *testing.B) (*PersistentGenUUID, func()) {
 	b.Helper()
 	dir, err := os.MkdirTemp("", "mono_uuid_bench-*")
 	if err != nil {
@@ -249,9 +249,9 @@ func newBenchDurableUUID(b *testing.B) (*DurableMonoUUID, func()) {
 	}
 	filename := filepath.Join(dir, "bench.wal")
 
-	d, err := OpenDurableUUID(filename, 1)
+	d, err := OpenGenUUID(filename, 1)
 	if err != nil {
-		b.Fatalf("OpenDurableUUID: %v", err)
+		b.Fatalf("OpenGenUUID: %v", err)
 	}
 
 	cleanup := func() {
@@ -261,8 +261,8 @@ func newBenchDurableUUID(b *testing.B) (*DurableMonoUUID, func()) {
 	return d, cleanup
 }
 
-func BenchmarkDurableMonotimeNext(b *testing.B) {
-	d, cleanup := newBenchDurableMonotime(b)
+func BenchmarkPersistentGenNext(b *testing.B) {
+	d, cleanup := newBenchPersistentGen(b)
 	defer cleanup()
 
 	b.ReportAllocs()
@@ -275,8 +275,8 @@ func BenchmarkDurableMonotimeNext(b *testing.B) {
 	b.StopTimer()
 }
 
-func BenchmarkDurableMonoUUIDNext(b *testing.B) {
-	d, cleanup := newBenchDurableUUID(b)
+func BenchmarkPersistentGenUUIDNext(b *testing.B) {
+	d, cleanup := newBenchPersistentGenUUID(b)
 	defer cleanup()
 
 	b.ReportAllocs()
@@ -289,8 +289,8 @@ func BenchmarkDurableMonoUUIDNext(b *testing.B) {
 	b.StopTimer()
 }
 
-func BenchmarkDurableMonoUUIDNextParallel(b *testing.B) {
-	d, cleanup := newBenchDurableUUID(b)
+func BenchmarkPersistentGenUUIDNextParallel(b *testing.B) {
+	d, cleanup := newBenchPersistentGenUUID(b)
 	defer cleanup()
 
 	b.ReportAllocs()
