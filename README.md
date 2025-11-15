@@ -84,14 +84,14 @@ This provides safety at the cost of significant performance drop.
 ```go
 // Opens (or creates) the log file and automatically restores (or initializes)
 // the generator state from the last entry
-mono, err := monotime.OpenGen("path/to/my.monotime")
+gen, err := monotime.OpenGen("path/to/my.monotime")
 if err != nil {
     log.Fatal(err)
 }
-defer mono.Close()
+defer gen.Close()
 
 // If err is nil, the generator state is guaranteed to be persisted to disk
-t, err := mono.Next()
+t, err := gen.Next()
 if err != nil {
     log.Fatal(err)
 }
@@ -102,14 +102,14 @@ if err != nil {
 ```go
 // Opens (or creates) the log file and automatically restores (or initializes)
 // the generator state from the last entry
-mono, err := monotime.OpenGenUUID("path/to/my.muid", nodeID)
+gen, err := monotime.OpenGenUUID("path/to/my.muid", nodeID)
 if err != nil {
     log.Fatal(err)
 }
-defer mono.Close()
+defer gen.Close()
 
 // If err is nil, the generator state is guaranteed to be persisted to disk
-id, err := mono.Next()
+id, err := gen.Next()
 if err != nil {
     log.Fatal(err)
 }
