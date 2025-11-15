@@ -102,7 +102,7 @@ if err != nil {
 ```go
 // Opens (or creates) the log file and automatically restores (or initializes)
 // the generator state from the last entry
-mono, err := monotime.OpenDurableUUID("path/to/my.muid", nodeID)
+mono, err := monotime.OpenGenUUID("path/to/my.muid", nodeID)
 if err != nil {
     log.Fatal(err)
 }
