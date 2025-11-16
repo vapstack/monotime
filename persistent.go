@@ -67,7 +67,7 @@ type PersistentGenUUID struct {
 // OpenGenUUID opens or creates a log file using the provided filename
 // and returns PersistentGenUUID with its state restored from the last entry in the log.
 // It will return an error if the provided nodeID does not match the node ID stored in the log.
-func OpenGenUUID(filename string, nodeID int) (*PersistentGenUUID, error) {
+func OpenGenUUID(nodeID int, filename string) (*PersistentGenUUID, error) {
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return nil, err
 	}

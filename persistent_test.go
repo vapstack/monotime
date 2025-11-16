@@ -89,7 +89,7 @@ func TestPersistentGenUUIDRoundtrip(t *testing.T) {
 	filename := newTestDir(t)
 	nodeID := 123
 
-	d1, err := OpenGenUUID(filename, nodeID)
+	d1, err := OpenGenUUID(nodeID, filename)
 	if err != nil {
 		t.Fatalf("OpenGenUUID (1): %v", err)
 	}
@@ -114,7 +114,7 @@ func TestPersistentGenUUIDRoundtrip(t *testing.T) {
 		t.Fatalf("WAL value mismatch: expected %s, got %s", u2, UUID(lastB))
 	}
 
-	d2, err := OpenGenUUID(filename, nodeID)
+	d2, err := OpenGenUUID(nodeID, filename)
 	if err != nil {
 		t.Fatalf("OpenGenUUID (2): %v", err)
 	}
@@ -139,7 +139,7 @@ func TestPersistentGenUUIDRoundtrip(t *testing.T) {
 func TestPersistentGenUUIDNodeIDMismatch(t *testing.T) {
 	filename := newTestDir(t)
 
-	d1, err := OpenGenUUID(filename, 10)
+	d1, err := OpenGenUUID(10, filename)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestPersistentGenUUIDNodeIDMismatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = OpenGenUUID(filename, 20)
+	_, err = OpenGenUUID(20, filename)
 	if err == nil {
 		t.Fatal("Expected error when opening WAL with mismatched nodeID, but got nil")
 	}
@@ -249,7 +249,7 @@ func newBenchPersistentGenUUID(b *testing.B) (*PersistentGenUUID, func()) {
 	}
 	filename := filepath.Join(dir, "bench.wal")
 
-	d, err := OpenGenUUID(filename, 1)
+	d, err := OpenGenUUID(1, filename)
 	if err != nil {
 		b.Fatalf("OpenGenUUID: %v", err)
 	}
