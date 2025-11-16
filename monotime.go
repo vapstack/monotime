@@ -165,6 +165,12 @@ func (u UUID) NodeID() int {
 	return node
 }
 
+// Valid returns true if the UUID contains a valid time and node ID.
+func (u UUID) Valid() bool {
+	_, _, ok := u.parse()
+	return ok
+}
+
 // String implements fmt.Stringer and returns the canonical
 // string representation of the UUID (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx).
 func (u UUID) String() string {
