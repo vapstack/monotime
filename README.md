@@ -210,8 +210,5 @@ BenchmarkUUIDParse-16                           131968159    9.132 ns/op      0 
 BenchmarkUUIDUnmarshalText-16                   43990878     26.64 ns/op      0 B/op     0 allocs/op
 BenchmarkUUIDUnmarshalBinary-16                 160009484    7.488 ns/op      0 B/op     0 allocs/op
 BenchmarkUUIDMarshalBinary-16                   64808425     16.76 ns/op     16 B/op     1 allocs/op
-BenchmarkPersistentGenNext-16                     932736      1291 ns/op      0 B/op     0 allocs/op
-BenchmarkPersistentGenUUIDNext-16                 927056      1271 ns/op      0 B/op     0 allocs/op
-BenchmarkPersistentGenUUIDNextParallel-16         843525      1454 ns/op      0 B/op     0 allocs/op
-
 ```
+ 
