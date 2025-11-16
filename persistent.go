@@ -200,6 +200,12 @@ func replaceFile(filename string, data []byte) (*os.File, bool, error) {
 		return nil, true, fmt.Errorf("rename error: %v", err)
 	}
 
+	// try to additionally sync dir
+	if d, err := os.Open(filepath.Dir(filename)); err == nil {
+		_ = d.Sync()
+		_ = d.Close()
+	}
+
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, false, fmt.Errorf("error opening newly created file: %w", err)
