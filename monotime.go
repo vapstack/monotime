@@ -400,3 +400,27 @@ func (g *GenUUID) Next() UUID {
 
 	return id
 }
+
+// MinUUID returns a bare UUID containing only the millisecond portion.
+// Primary use is to provide ranges for database scans.
+func MinUUID(nodeID int, t time.Time) (id UUID) {
+	ms := t.UnixMilli()
+	id[0] = byte(ms >> 40)
+	id[1] = byte(ms >> 32)
+	id[2] = byte(ms >> 24)
+	id[3] = byte(ms >> 16)
+	id[4] = byte(ms >> 8)
+	id[5] = byte(ms)
+	id[6] = 0x70
+
+	prefixPayload := uint64(monoPrefix) << prefixShift
+	nodePayload := uint64(nodeID) << nodeShift
+
+	var payloadBytes [8]byte
+	binary.BigEndian.PutUint64(payloadBytes[:], prefixPayload|nodePayload)
+
+	id[8] = (payloadBytes[0] & 0x3F) | 0x80
+	copy(id[9:16], payloadBytes[1:8])
+
+	return
+}
